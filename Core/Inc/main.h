@@ -66,10 +66,6 @@ void Error_Handler(void);
 #define nrf_CE_GPIO_Port GPIOA
 #define nrf_CS_Pin GPIO_PIN_4
 #define nrf_CS_GPIO_Port GPIOA
-#define TEST_OUT_Pin GPIO_PIN_5
-#define TEST_OUT_GPIO_Port GPIOA
-#define DEBUG_OUT_Pin GPIO_PIN_12
-#define DEBUG_OUT_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

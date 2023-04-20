@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include "semphr.h"
+#include "stdbool.h"
 
 #include "nrf24L01/nrf24L01.h"
 
@@ -46,6 +47,8 @@ uint8_t buf1[40] = {0};
 
 #define NRF_MODE TX
 
+
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -54,6 +57,8 @@ uint8_t buf1[40] = {0};
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 SPI_HandleTypeDef hspi2;
 
 UART_HandleTypeDef huart1;
@@ -72,6 +77,13 @@ const osThreadAttr_t nrf_task_attributes = {
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for AdcTask */
+osThreadId_t AdcTaskHandle;
+const osThreadAttr_t AdcTask_attributes = {
+  .name = "AdcTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* Definitions for semFromNrfIRQ_Pin */
 osSemaphoreId_t semFromNrfIRQ_PinHandle;
 const osSemaphoreAttr_t semFromNrfIRQ_Pin_attributes = {
@@ -86,8 +98,10 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_ADC1_Init(void);
 void StartDefaultTask(void *argument);
 void Start_nrf_task(void *argument);
+void StartAdcTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -96,9 +110,86 @@ void Start_nrf_task(void *argument);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+//{
+//	int ggg =9;
+//  if(hadc->Instance == ADC1)
+//  {
+//    for (uint8_t i = 0; i < ADC_CHANNELS_NUM; i++)
+//    {
+//      adcVoltage[i] = adcData[i] * 3.3 / 4095;
+//    }
+//  }
+//}
+// -------------------------------------------------------------------------------------
+uint16_t simpleAdcRead(void)
+{
+	uint16_t adc_value = 0;
 
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 100);
+	adc_value = HAL_ADC_GetValue(&hadc1);
+	HAL_ADC_Stop(&hadc1);
 
+	return adc_value;
+}
+// -------------------------------------------------------------------------------------
+int ADC_Get_Value(uint8_t chanel)
+{
+	ADC_ChannelConfTypeDef sConfig = {0};
+	uint32_t adc_value = 0;
+	bool error_ststus = false;
 
+	switch (chanel)
+	{
+		case 1:
+			sConfig.Channel = ADC_CHANNEL_1;
+			break;
+
+		case 5:
+			sConfig.Channel = ADC_CHANNEL_5;
+			break;
+
+		case 6:
+			sConfig.Channel = ADC_CHANNEL_6;
+			break;
+
+		case 7:
+			sConfig.Channel = ADC_CHANNEL_7;
+			break;
+
+		case 8:
+			sConfig.Channel = ADC_CHANNEL_8;
+			break;
+
+		default:
+			error_ststus = true;
+			break;
+	}
+
+	if(error_ststus != true)
+	{
+		sConfig.Rank = 1;
+		sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES;
+
+		if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+		{
+			Error_Handler();
+		}
+
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_PollForConversion(&hadc1, 100);
+		adc_value = HAL_ADC_GetValue(&hadc1);
+		HAL_ADC_Stop(&hadc1);
+
+		return adc_value;
+	}
+	else		// Init ERROR
+	{
+		return -1;
+	}
+
+}
 /* USER CODE END 0 */
 
 /**
@@ -131,6 +222,7 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI2_Init();
   MX_USART1_UART_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
 //  HAL_Delay(1000);
@@ -174,6 +266,9 @@ int main(void)
 
   /* creation of nrf_task */
   nrf_taskHandle = osThreadNew(Start_nrf_task, NULL, &nrf_task_attributes);
+
+  /* creation of AdcTask */
+  AdcTaskHandle = osThreadNew(StartAdcTask, NULL, &AdcTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -250,6 +345,96 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV8;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = ENABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 5;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = 2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = 3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_7;
+  sConfig.Rank = 4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_8;
+  sConfig.Rank = 5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
@@ -342,10 +527,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, nrf_CE_Pin|nrf_CS_Pin|TEST_OUT_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(DEBUG_OUT_GPIO_Port, DEBUG_OUT_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, nrf_CE_Pin|nrf_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED_Pin */
   GPIO_InitStruct.Pin = LED_Pin;
@@ -354,36 +536,20 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /*Configure GPIO pin : nrf_IRQ_Pin */
   GPIO_InitStruct.Pin = nrf_IRQ_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(nrf_IRQ_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : nrf_CE_Pin nrf_CS_Pin TEST_OUT_Pin */
-  GPIO_InitStruct.Pin = nrf_CE_Pin|nrf_CS_Pin|TEST_OUT_Pin;
+  /*Configure GPIO pins : nrf_CE_Pin nrf_CS_Pin */
+  GPIO_InitStruct.Pin = nrf_CE_Pin|nrf_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : DEBUG_OUT_Pin */
-  GPIO_InitStruct.Pin = DEBUG_OUT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(DEBUG_OUT_GPIO_Port, &GPIO_InitStruct);
-
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI1_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
-
   HAL_NVIC_SetPriority(EXTI2_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
@@ -413,7 +579,6 @@ void StartDefaultTask(void *argument)
 
 //	  xSemaphoreTake(semFromNrfIRQ_PinHandle ,portMAX_DELAY);
 //	  HAL_GPIO_TogglePin(GPIOA, TEST_OUT_Pin);
-
 
 
 	  osDelay(100);
@@ -453,6 +618,35 @@ void Start_nrf_task(void *argument)
 	  osDelay(1);
   }
   /* USER CODE END Start_nrf_task */
+}
+
+/* USER CODE BEGIN Header_StartAdcTask */
+/**
+* @brief Function implementing the AdcTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartAdcTask */
+void StartAdcTask(void *argument)
+{
+  /* USER CODE BEGIN StartAdcTask */
+  /* Infinite loop */
+
+
+	int adc_values[5] = {0};
+
+
+  for(;;)
+  {
+	  adc_values[0] = ADC_Get_Value(1);
+	  adc_values[1] = ADC_Get_Value(5);
+	  adc_values[2] = ADC_Get_Value(6);
+	  adc_values[3] = ADC_Get_Value(7);
+	  adc_values[4] = ADC_Get_Value(8);
+
+	  osDelay(100);
+  }
+  /* USER CODE END StartAdcTask */
 }
 
 /**

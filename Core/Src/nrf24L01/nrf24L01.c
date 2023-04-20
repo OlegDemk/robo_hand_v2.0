@@ -309,7 +309,7 @@ uint8_t NRF24L01_Send(uint8_t *pBuf)
 
 	while((GPIO_PinState)IRQ == GPIO_PIN_SET) {}
 
-	HAL_GPIO_TogglePin(GPIOA, TEST_OUT_Pin);    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< for debug latency
+	//HAL_GPIO_TogglePin(GPIOA, TEST_OUT_Pin);    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< for debug latency
 
 	status = NRF24_ReadReg(STATUS);
 
