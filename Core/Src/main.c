@@ -142,6 +142,9 @@ int ADC_Get_Value(uint8_t chanel)
 
 	switch (chanel)
 	{
+		case 0:
+			sConfig.Channel = ADC_CHANNEL_0;
+			break;
 		case 1:
 			sConfig.Channel = ADC_CHANNEL_1;
 			break;
@@ -160,6 +163,10 @@ int ADC_Get_Value(uint8_t chanel)
 
 		case 8:
 			sConfig.Channel = ADC_CHANNEL_8;
+			break;
+
+		case 9:
+			sConfig.Channel = ADC_CHANNEL_9;
 			break;
 
 		default:
@@ -376,7 +383,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 5;
+  hadc1.Init.NbrOfConversion = 7;
   hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -425,6 +432,24 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_8;
   sConfig.Rank = 5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Rank = 6;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_9;
+  sConfig.Rank = 7;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -549,6 +574,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SW_Pin */
+  GPIO_InitStruct.Pin = SW_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SW_GPIO_Port, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI2_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
@@ -633,16 +664,21 @@ void StartAdcTask(void *argument)
   /* Infinite loop */
 
 
-	int adc_values[5] = {0};
+	int adc_values[7] = {0};
 
 
   for(;;)
   {
+	  // Resistors
 	  adc_values[0] = ADC_Get_Value(1);
 	  adc_values[1] = ADC_Get_Value(5);
 	  adc_values[2] = ADC_Get_Value(6);
 	  adc_values[3] = ADC_Get_Value(7);
 	  adc_values[4] = ADC_Get_Value(8);
+
+	  // Joystick
+	  adc_values[5] = ADC_Get_Value(0);
+	  adc_values[6] = ADC_Get_Value(9);
 
 	  osDelay(100);
   }
