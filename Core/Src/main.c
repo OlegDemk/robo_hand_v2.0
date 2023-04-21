@@ -678,7 +678,7 @@ void StartAdcTask(void *argument)
 	  adc_values[6] = ADC_Get_Value(9);
 
 	  // Send data into queue
-	  uint8_t adc_data[21] = {0};
+	  uint8_t adc_data[20] = {0};
 
 	  memcpy(&adc_data[0], &adc_values[0], sizeof(uint16_t));
 	  memcpy(&adc_data[2], &adc_values[1], sizeof(uint16_t));
@@ -686,10 +686,10 @@ void StartAdcTask(void *argument)
 	  memcpy(&adc_data[6], &adc_values[3], sizeof(uint16_t));
 	  memcpy(&adc_data[8], &adc_values[4], sizeof(uint16_t));
 
-	  memcpy(&adc_data[10], &adc_values[5], sizeof(uint16_t));
-	  memcpy(&adc_data[12], &adc_values[6], sizeof(uint16_t));
+	  memcpy(&adc_data[10], &adc_values[6], sizeof(uint16_t));
+	  memcpy(&adc_data[12], &adc_values[5], sizeof(uint16_t));
 
-	  adc_data[13] = 99;			// Заглушка під кнопку джойстика
+	  adc_data[14] = 99;			// Заглушка під кнопку джойстика
 
 	  //
 	  NRF24L01_Transmit_Real_Data(adc_data);

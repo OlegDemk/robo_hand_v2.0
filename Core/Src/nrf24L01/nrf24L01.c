@@ -14,7 +14,7 @@
 #include "nrf24L01/nrf24L01.h"
 
 #define TX_ADR_WIDTH 3
-#define TX_PLOAD_WIDTH 13    // 5
+#define TX_PLOAD_WIDTH 18    // 5
 
 
 extern char str1[40];
@@ -467,22 +467,34 @@ void NRF24L01_Receive_Real_Data(void)
 	    //char test_data[10] = "TEST\n\r";
 
 
-	    char str[100] = {0};
 
+	    char str[50] = {0};
+
+	    char str_main_buf[100] = {0};
 
 	    uint16_t rx_data = 0;
 	    char str_buf[15] = {0};
 
-	    rx_data = RX_BUF[0];
-	    rx_data = rx_data + (RX_BUF[1] * 256);
-
-
-	    sprintf(str, "R1:%d \n\r", rx_data);
-
-
-
-
+	    sprintf(str, "---------\n\r", rx_data);
 	    HAL_UART_Transmit(&huart1, str, sizeof(str), 1000);
+
+	    memset(str_buf, 0, sizeof(str_buf));
+
+	    uint8_t r = 1;
+	    for(uint8_t i = 0; i <= 12; i = i+2)
+	    {
+
+	    	rx_data = RX_BUF[0+i];
+	    	rx_data = rx_data + (RX_BUF[1+i] * 256);
+	    	sprintf(str, "R%d: %d  ", r, rx_data);
+
+	    	strcat(str_main_buf, str);
+	    	r++;
+	    }
+
+	    HAL_UART_Transmit(&huart1, str_main_buf, sizeof(str_main_buf), 1000);
+
+
 
 	  }
 }
