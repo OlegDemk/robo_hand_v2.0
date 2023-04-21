@@ -45,7 +45,7 @@ uint8_t buf1[40] = {0};
 #define RX 1
 #define TX 0
 
-#define NRF_MODE TX
+#define NRF_MODE RX
 
 
 
@@ -195,8 +195,11 @@ int ADC_Get_Value(uint8_t chanel)
 	{
 		return -1;
 	}
-
 }
+// -------------------------------------------------------------------------------------
+
+// -------------------------------------------------------------------------------------
+
 /* USER CODE END 0 */
 
 /**
@@ -232,13 +235,6 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
-//  HAL_Delay(1000);
-//
-//#if NRF_MODE == TX
-//  NRF24_init_TX();
-//#else
-//  NRF24_init_RX();
-//#endif
 
   testReadWriteSetingd();			// For debug
 
@@ -641,9 +637,10 @@ void Start_nrf_task(void *argument)
 	  {
 
 #if NRF_MODE == TX
-	  NRF24L01_Transmit();
+	 // NRF24L01_Transmit();
 #else
-	  NRF24L01_Receive();
+	  // NRF24L01_Receive();
+	NRF24L01_Receive_Real_Data();
 #endif
 
 	  osDelay(1);
@@ -663,12 +660,12 @@ void StartAdcTask(void *argument)
   /* USER CODE BEGIN StartAdcTask */
   /* Infinite loop */
 
-
-	int adc_values[7] = {0};
-
+	uint16_t adc_values[7] = {0};
 
   for(;;)
   {
+
+#if NRF_MODE == TX
 	  // Resistors
 	  adc_values[0] = ADC_Get_Value(1);
 	  adc_values[1] = ADC_Get_Value(5);
@@ -680,7 +677,29 @@ void StartAdcTask(void *argument)
 	  adc_values[5] = ADC_Get_Value(0);
 	  adc_values[6] = ADC_Get_Value(9);
 
-	  osDelay(100);
+	  // Send data into queue
+	  uint8_t adc_data[21] = {0};
+
+	  memcpy(&adc_data[0], &adc_values[0], sizeof(uint16_t));
+	  memcpy(&adc_data[2], &adc_values[1], sizeof(uint16_t));
+	  memcpy(&adc_data[4], &adc_values[2], sizeof(uint16_t));
+	  memcpy(&adc_data[6], &adc_values[3], sizeof(uint16_t));
+	  memcpy(&adc_data[8], &adc_values[4], sizeof(uint16_t));
+
+	  memcpy(&adc_data[10], &adc_values[5], sizeof(uint16_t));
+	  memcpy(&adc_data[12], &adc_values[6], sizeof(uint16_t));
+
+	  adc_data[13] = 99;			// Заглушка під кнопку джойстика
+
+	  //
+	  NRF24L01_Transmit_Real_Data(adc_data);
+#endif
+
+
+
+
+
+	  osDelay(500);
   }
   /* USER CODE END StartAdcTask */
 }

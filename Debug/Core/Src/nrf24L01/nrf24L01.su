@@ -17,3 +17,5 @@
 ../Core/Src/nrf24L01/nrf24L01.c:335:6:NRF24L01_Transmit	16	static
 ../Core/Src/nrf24L01/nrf24L01.c:367:6:led_test	8	static
 ../Core/Src/nrf24L01/nrf24L01.c:373:6:NRF24L01_Receive	16	static
+../Core/Src/nrf24L01/nrf24L01.c:406:6:NRF24L01_Transmit_Real_Data	24	static
+../Core/Src/nrf24L01/nrf24L01.c:440:6:NRF24L01_Receive_Real_Data	136	static

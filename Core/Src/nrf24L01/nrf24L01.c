@@ -14,7 +14,7 @@
 #include "nrf24L01/nrf24L01.h"
 
 #define TX_ADR_WIDTH 3
-#define TX_PLOAD_WIDTH 5
+#define TX_PLOAD_WIDTH 13    // 5
 
 
 extern char str1[40];
@@ -363,7 +363,7 @@ void NRF24L01_Transmit(void)
 		i=1;
 	}
 }
-// -------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
 void led_test(void)
 {
 	 // LED_ON;
@@ -403,7 +403,89 @@ void NRF24L01_Receive(void)
 	  }
 }
 // -------------------------------------------------------------------------------------
+void NRF24L01_Transmit_Real_Data(uint8_t* data)
+{
 
+//	static uint8_t retr_cnt, dt;
+//	static uint16_t i=1, retr_cnt_full;
+//
+//	//	HAL_Delay(500);
+//	osDelay(500);
+//
+//	memcpy(buf1,(uint8_t*)&i,2);
+//
+//	if(retr_cnt_full>999)
+//	{
+//		retr_cnt_full=999;
+//	}
+//	memcpy(buf1+2,(uint8_t*)&retr_cnt_full,2);
+
+
+	char test_tx_data[] = "123\n\r";
+
+	NRF24L01_Send(data);
+	//dt = NRF24L01_Send(buf1);
+//	retr_cnt = dt & 0x0F;
+//
+//	i++;
+//	retr_cnt_full += retr_cnt;
+//
+//	if(i>=999)
+//	{
+//		i=1;
+//	}
+
+}
+// -------------------------------------------------------------------------------------
+void NRF24L01_Receive_Real_Data(void)
+{
+	uint8_t status=0x01;
+	uint16_t dt=0;
+
+	while((GPIO_PinState)IRQ == GPIO_PIN_SET) {}			//	 Замінити це на нотифікацію від зміни ножки або семафор
+
+	status = NRF24_ReadReg(STATUS);
+
+	sprintf(str1,"STATUS: 0x%02X\r\n",status);
+	//HAL_UART_Transmit(&huart2,(uint8_t*)str1,strlen(str1),0x1000);
+	LED_TGL;
+
+	DelayMicro(10);
+
+	status = NRF24_ReadReg(STATUS);
+
+	if(status & 0x40)			// If new data in RX buffer available
+	{
+		NRF24_Read_Buf(RD_RX_PLOAD,RX_BUF,TX_PLOAD_WIDTH);
+	    dt = *(int16_t*)RX_BUF;
+	    //Clear_7219();
+	    //Number_7219(dt);
+	    dt = *(int16_t*)(RX_BUF+2);
+	    //NumberL_7219(dt);
+	    NRF24_WriteReg(STATUS, 0x40);
+
+	    //char test_data[10] = "TEST\n\r";
+
+
+	    char str[100] = {0};
+
+
+	    uint16_t rx_data = 0;
+	    char str_buf[15] = {0};
+
+	    rx_data = RX_BUF[0];
+	    rx_data = rx_data + (RX_BUF[1] * 256);
+
+
+	    sprintf(str, "R1:%d \n\r", rx_data);
+
+
+
+
+	    HAL_UART_Transmit(&huart1, str, sizeof(str), 1000);
+
+	  }
+}
 
 
 

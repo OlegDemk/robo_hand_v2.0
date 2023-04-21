@@ -68,6 +68,9 @@ void NRF24_init_RX(void);
 void NRF24_Read_Buf(uint8_t addr,uint8_t *pBuf,uint8_t bytes);
 uint8_t NRF24L01_Send(uint8_t *pBuf);
 void NRF24L01_Receive(void);
+void NRF24L01_Transmit(void);
+void NRF24L01_Transmit_Real_Data(uint8_t* data);
+void NRF24L01_Receive_Real_Data(void);
 
 void testReadWriteSetingd(void);
 void testDelay(void);
