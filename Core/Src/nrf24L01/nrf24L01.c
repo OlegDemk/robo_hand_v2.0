@@ -259,7 +259,7 @@ void testReadWriteSetingd(void)
 // -------------------------------------------------------------------------------------
 void testDelay(void)
 {
-	HAL_GPIO_TogglePin(GPIOC, LED_Pin);
+	//HAL_GPIO_TogglePin(GPIOC, LED_Pin);
 	DelayMicro(1000);
 
 }
@@ -491,6 +491,9 @@ void NRF24L01_Receive_Real_Data(void)
 	    	strcat(str_main_buf, str);
 	    	r++;
 	    }
+
+
+	    // Send data into Queue
 
 	    HAL_UART_Transmit(&huart1, str_main_buf, sizeof(str_main_buf), 1000);
 
