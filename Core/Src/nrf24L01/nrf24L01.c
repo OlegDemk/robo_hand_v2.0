@@ -12,6 +12,8 @@
 //#include "cmsis_os.h"
 
 #include "nrf24L01/nrf24L01.h"
+#include "cmsis_os.h"
+#include "queue.h"
 
 #define TX_ADR_WIDTH 3
 #define TX_PLOAD_WIDTH 18    // 5
@@ -25,6 +27,8 @@ uint8_t RX_BUF[TX_PLOAD_WIDTH] = {0};
 
 extern SPI_HandleTypeDef hspi2;
 extern UART_HandleTypeDef huart1;
+
+extern osMessageQueueId_t RQueueHandle;
 
 uint8_t NRF24_ReadReg(uint8_t addr);
 static void NRF24_ToggleFeatures(void);
@@ -492,10 +496,32 @@ void NRF24L01_Receive_Real_Data(void)
 	    	r++;
 	    }
 
-
-	    // Send data into Queue
-
 	    HAL_UART_Transmit(&huart1, str_main_buf, sizeof(str_main_buf), 1000);
+	    //Зробити чергу довжиною в str_main_buf і парсити її в тасці StartDefaultTask
+
+
+
+//	     зформувати в черзі пакет з 8 uint16_t даними. Використати структуру
+//
+//		 struct{
+//	    	 uint16_t R1;
+//	    	 ...
+//			 uint16_t R5;
+//	    	 uint16_t djoistik x
+//			 uint16_t djoistik y
+//			 uint16_t button
+//	     };
+
+
+	    uint16_t data = 0;
+
+	    data = RX_BUF[0];
+	    data = data + (RX_BUF[1] * 256);
+
+	    xQueueSendToBack(RQueueHandle, &data, 1000);
+
+
+
 
 
 

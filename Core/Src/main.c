@@ -45,7 +45,7 @@ uint8_t buf1[40] = {0};
 #define RX 1
 #define TX 0
 
-#define NRF_MODE RX
+#define NRF_MODE TX
 
 
 
@@ -86,6 +86,11 @@ const osThreadAttr_t AdcTask_attributes = {
   .name = "AdcTask",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for RQueue */
+osMessageQueueId_t RQueueHandle;
+const osMessageQueueAttr_t RQueue_attributes = {
+  .name = "RQueue"
 };
 /* Definitions for semFromNrfIRQ_Pin */
 osSemaphoreId_t semFromNrfIRQ_PinHandle;
@@ -356,6 +361,10 @@ int main(void)
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
+
+  /* Create the queue(s) */
+  /* creation of RQueue */
+  RQueueHandle = osMessageQueueNew (5, sizeof(uint16_t), &RQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -807,7 +816,7 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
 
-
+	uint16_t data = 0;
 
   for(;;)
   {
@@ -817,10 +826,23 @@ void StartDefaultTask(void *argument)
 //	  3. Transmeet it into Set_Servo_Angle function
 
 
-	  Test_Servo_Motor();
-	  osDelay(3000);
+ //  не робить
+	  if(xQueueReceive(RQueueHandle, &data, 0))            			// Show settings time
+	  {
+		  uint8_t angle = 0;
 
 
+		  // convert R data into angle
+
+		  data = data / 23;
+
+		  Set_Servo_Angle(1, data);
+	  }
+
+//	  Test_Servo_Motor();
+//	  osDelay(3000);
+
+	  osDelay(100);
 
 
 
@@ -914,7 +936,7 @@ void StartAdcTask(void *argument)
 
 
 
-	  osDelay(500);
+	  osDelay(100);
   }
   /* USER CODE END StartAdcTask */
 }
