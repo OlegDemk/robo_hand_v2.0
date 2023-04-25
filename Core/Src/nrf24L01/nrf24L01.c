@@ -469,8 +469,6 @@ void NRF24L01_Receive_Real_Data(void)
 	    //NumberL_7219(dt);
 	    NRF24_WriteReg(STATUS, 0x40);
 
-	    //char test_data[10] = "TEST\n\r";
-
 
 
 	    char str[50] = {0};
