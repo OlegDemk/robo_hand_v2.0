@@ -45,7 +45,7 @@ uint8_t buf1[40] = {0};
 #define RX 1
 #define TX 0
 
-#define NRF_MODE TX
+#define NRF_MODE RX
 
 
 
@@ -91,6 +91,11 @@ const osThreadAttr_t AdcTask_attributes = {
 osMessageQueueId_t RQueueHandle;
 const osMessageQueueAttr_t RQueue_attributes = {
   .name = "RQueue"
+};
+/* Definitions for DATAQueue */
+osMessageQueueId_t DATAQueueHandle;
+const osMessageQueueAttr_t DATAQueue_attributes = {
+  .name = "DATAQueue"
 };
 /* Definitions for semFromNrfIRQ_Pin */
 osSemaphoreId_t semFromNrfIRQ_PinHandle;
@@ -266,7 +271,7 @@ void PWM_Tim_Init(uint8_t ServoNum, uint32_t DutyCycle)
 		{
 			chanel = TIM_CHANNEL_2;
 		}
-		if(ServoNum == 4)
+		if(ServoNum == 5)
 		{
 			chanel = TIM_CHANNEL_3;
 		}
@@ -365,6 +370,9 @@ int main(void)
   /* Create the queue(s) */
   /* creation of RQueue */
   RQueueHandle = osMessageQueueNew (5, sizeof(uint16_t), &RQueue_attributes);
+
+  /* creation of DATAQueue */
+  DATAQueueHandle = osMessageQueueNew (1, sizeof(DATA), &DATAQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -818,6 +826,9 @@ void StartDefaultTask(void *argument)
 
 	uint16_t data = 0;
 
+
+	DATA DATA_t;
+
   for(;;)
   {
 
@@ -827,16 +838,28 @@ void StartDefaultTask(void *argument)
 
 
  //  не робить
-	  if(xQueueReceive(RQueueHandle, &data, 0))            			// Show settings time
+	  if(xQueueReceive(DATAQueueHandle, &DATA_t, 0))            			// Show settings time
 	  {
 		  uint8_t angle = 0;
 
 
 		  // convert R data into angle
 
-		  data = data / 23;
+		  DATA_t.R1 = DATA_t.R1 / 23;
+		  DATA_t.R2 = DATA_t.R2 / 23;
+		  DATA_t.R3 = DATA_t.R3 / 23;
+		  DATA_t.R4 = DATA_t.R4 / 23;
+		  DATA_t.R5 = DATA_t.R5 / 23;
 
-		  Set_Servo_Angle(1, data);
+		  Set_Servo_Angle(1, DATA_t.R1);
+		  Set_Servo_Angle(2, DATA_t.R2);
+		  Set_Servo_Angle(3, DATA_t.R3);
+		  Set_Servo_Angle(4, DATA_t.R4);
+		  Set_Servo_Angle(5, DATA_t.R5);
+
+
+
+
 	  }
 
 //	  Test_Servo_Motor();

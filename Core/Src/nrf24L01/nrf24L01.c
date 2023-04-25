@@ -28,7 +28,8 @@ uint8_t RX_BUF[TX_PLOAD_WIDTH] = {0};
 extern SPI_HandleTypeDef hspi2;
 extern UART_HandleTypeDef huart1;
 
-extern osMessageQueueId_t RQueueHandle;
+//extern osMessageQueueId_t RQueueHandle;
+extern osMessageQueueId_t DATAQueueHandle;
 
 uint8_t NRF24_ReadReg(uint8_t addr);
 static void NRF24_ToggleFeatures(void);
@@ -500,28 +501,36 @@ void NRF24L01_Receive_Real_Data(void)
 	    //Зробити чергу довжиною в str_main_buf і парсити її в тасці StartDefaultTask
 
 
-
-//	     зформувати в черзі пакет з 8 uint16_t даними. Використати структуру
-//
-//		 struct{
-//	    	 uint16_t R1;
-//	    	 ...
-//			 uint16_t R5;
-//	    	 uint16_t djoistik x
-//			 uint16_t djoistik y
-//			 uint16_t button
-//	     };
-
-
-	    uint16_t data = 0;
-
-	    data = RX_BUF[0];
-	    data = data + (RX_BUF[1] * 256);
-
-	    xQueueSendToBack(RQueueHandle, &data, 1000);
+	    DATA DATA_t;
 
 
 
+	    DATA_t.R1 = RX_BUF[0];
+	    DATA_t.R1 = DATA_t.R1 + (RX_BUF[1] * 256);
+
+	    DATA_t.R2 = RX_BUF[2];
+	    DATA_t.R2 = DATA_t.R2 + (RX_BUF[3] * 256);
+
+	    DATA_t.R3 = RX_BUF[4];
+	   	DATA_t.R3 = DATA_t.R3 + (RX_BUF[5] * 256);
+
+	   	DATA_t.R4 = RX_BUF[6];
+	   	DATA_t.R4 = DATA_t.R4 + (RX_BUF[7] * 256);
+
+	   	DATA_t.R5 = RX_BUF[8];
+	   	DATA_t.R5 = DATA_t.R5 + (RX_BUF[9] * 256);
+
+	   	DATA_t.joystick_X = RX_BUF[10];
+	   	DATA_t.joystick_X = DATA_t.joystick_X + (RX_BUF[11] * 256);
+
+	   	DATA_t.joystick_Y = RX_BUF[12];
+	   	DATA_t.joystick_Y = DATA_t.joystick_Y + (RX_BUF[13] * 256);
+
+		DATA_t.joystick_button = RX_BUF[14];
+		DATA_t.joystick_button = DATA_t.joystick_button + (RX_BUF[15] * 256);
+
+
+	    xQueueSendToBack(DATAQueueHandle, &DATA_t, 1000);
 
 
 
