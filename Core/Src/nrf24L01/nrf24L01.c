@@ -27,8 +27,6 @@ uint8_t RX_BUF[TX_PLOAD_WIDTH] = {0};
 
 extern SPI_HandleTypeDef hspi2;
 extern UART_HandleTypeDef huart1;
-
-//extern osMessageQueueId_t RQueueHandle;
 extern osMessageQueueId_t DATAQueueHandle;
 
 uint8_t NRF24_ReadReg(uint8_t addr);
@@ -39,7 +37,6 @@ static void NRF24_FlushTX(void);
 void NRF24L01_RX_Mode(void);
 void NRF24_Write_Buf(uint8_t addr,uint8_t *pBuf,uint8_t bytes);
 
-
 void print_Data_Ower_uart(uint8_t *RX_BUF);
 void parsing_Data(uint8_t *RX_BUF);
 
@@ -47,7 +44,6 @@ void parsing_Data(uint8_t *RX_BUF);
 __STATIC_INLINE void DelayMicro(__IO uint32_t micros)
 {
 	micros *= (SystemCoreClock / 1000000) / 7;   // 9
-
 	/* Wait till done */
 	while (micros--) ;
 }
@@ -55,12 +51,12 @@ __STATIC_INLINE void DelayMicro(__IO uint32_t micros)
 void NRF24_init_TX(void)
 {
 	 CE_RESET;
-	 //DelayMicro(5000);
+	 // DelayMicro(5000);
 	 osDelay(5);
-	// HAL_Delay(5);
+	 // HAL_Delay(5);
 	 NRF24_WriteReg(CONFIG, 0x0a); 			// Set PWR_UP bit, enable CRC(1 byte) &Prim_RX:0 (Transmitter)
-	 //DelayMicro(5000);
-//	 HAL_Delay(5);
+	 // DelayMicro(5000);
+	 // HAL_Delay(5);
 	 osDelay(5);
 
 	 NRF24_WriteReg(EN_AA, 0x01); 			// Enable pipe 0

@@ -45,7 +45,7 @@ uint8_t buf1[40] = {0};
 #define RX 1
 #define TX 0
 
-#define NRF_MODE TX
+#define NRF_MODE RX
 
 
 
@@ -73,17 +73,17 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for nrf_task */
-osThreadId_t nrf_taskHandle;
-const osThreadAttr_t nrf_task_attributes = {
-  .name = "nrf_task",
+/* Definitions for tx_task */
+osThreadId_t tx_taskHandle;
+const osThreadAttr_t tx_task_attributes = {
+  .name = "tx_task",
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for AdcTask */
-osThreadId_t AdcTaskHandle;
-const osThreadAttr_t AdcTask_attributes = {
-  .name = "AdcTask",
+/* Definitions for rx_Task */
+osThreadId_t rx_TaskHandle;
+const osThreadAttr_t rx_Task_attributes = {
+  .name = "rx_Task",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
@@ -115,8 +115,8 @@ static void MX_ADC1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM4_Init(void);
 void StartDefaultTask(void *argument);
-void Start_nrf_task(void *argument);
-void StartAdcTask(void *argument);
+void Start_tx_task(void *argument);
+void Start_rx_Task(void *argument);
 
 /* USER CODE BEGIN PFP */
 void PWM_Tim_Init(uint8_t ServoNum, uint32_t DutyCycle);
@@ -126,18 +126,6 @@ void Test_Servo_Motor(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
-//{
-//	int ggg =9;
-//  if(hadc->Instance == ADC1)
-//  {
-//    for (uint8_t i = 0; i < ADC_CHANNELS_NUM; i++)
-//    {
-//      adcVoltage[i] = adcData[i] * 3.3 / 4095;
-//    }
-//  }
-//}
 
 
 // -------------------------------------------------------------------------------------
@@ -343,6 +331,13 @@ int main(void)
   HAL_Delay(1000);
 
 
+//#if NRF_MODE == TX
+//	  NRF24_init_TX();
+//#else
+//	  NRF24_init_RX();
+//#endif
+
+
  // testReadWriteSetingd();			// For debug
 
   /* USER CODE END 2 */
@@ -381,11 +376,11 @@ int main(void)
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-  /* creation of nrf_task */
-  nrf_taskHandle = osThreadNew(Start_nrf_task, NULL, &nrf_task_attributes);
+  /* creation of tx_task */
+  tx_taskHandle = osThreadNew(Start_tx_task, NULL, &tx_task_attributes);
 
-  /* creation of AdcTask */
-  AdcTaskHandle = osThreadNew(StartAdcTask, NULL, &AdcTask_attributes);
+  /* creation of rx_Task */
+  rx_TaskHandle = osThreadNew(Start_rx_Task, NULL, &rx_Task_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -815,41 +810,31 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
 
-	uint16_t data = 0;
-	DATA DATA_t;
+//	uint16_t data = 0;
+//	DATA DATA_t;
 
   for(;;)
   {
-
-//	  1. Get raw data R1, R2, R3, R4, R5 from NRF module
-//	  2. Convert R data into angle
-//	  3. Transmeet it into Set_Servo_Angle function
-
-
- //  не робить
-	  if(xQueueReceive(DATAQueueHandle, &DATA_t, 0))            			// Show settings time
-	  {
-		  uint8_t angle = 0;
-
-		  // convert R data into angle
-		  DATA_t.R1 = DATA_t.R1 / 23;
-		  DATA_t.R2 = DATA_t.R2 / 23;
-		  DATA_t.R3 = DATA_t.R3 / 23;
-		  DATA_t.R4 = DATA_t.R4 / 23;
-		  DATA_t.R5 = DATA_t.R5 / 23;
-
-
-		  Set_Servo_Angle(1, DATA_t.R1);
-		  Set_Servo_Angle(2, DATA_t.R2);
-		  Set_Servo_Angle(3, DATA_t.R3);
-		  Set_Servo_Angle(4, DATA_t.R4);
-		  Set_Servo_Angle(5, DATA_t.R5);
-	  }
-
-//	  Test_Servo_Motor();
-//	  osDelay(3000);
-
-	  osDelay(1);
+//	  if(xQueueReceive(DATAQueueHandle, &DATA_t, 0))
+//	  {
+//
+//		  // convert R data into angle
+//		  DATA_t.R1 = DATA_t.R1 / 23;
+//		  DATA_t.R2 = DATA_t.R2 / 23;
+//		  DATA_t.R3 = DATA_t.R3 / 23;
+//		  DATA_t.R4 = DATA_t.R4 / 23;
+//		  DATA_t.R5 = DATA_t.R5 / 23;
+//
+//
+//		  Set_Servo_Angle(1, DATA_t.R1);
+//		  Set_Servo_Angle(2, DATA_t.R2);
+//		  Set_Servo_Angle(3, DATA_t.R3);
+//		  Set_Servo_Angle(4, DATA_t.R4);
+//		  Set_Servo_Angle(5, DATA_t.R5);
+//	  }
+//
+//
+	  osDelay(10);
 
 
 
@@ -857,95 +842,105 @@ void StartDefaultTask(void *argument)
   /* USER CODE END 5 */
 }
 
-/* USER CODE BEGIN Header_Start_nrf_task */
+/* USER CODE BEGIN Header_Start_tx_task */
 /**
-* @brief Function implementing the nrf_task thread.
+* @brief Function implementing the tx_task thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_Start_nrf_task */
-void Start_nrf_task(void *argument)
+/* USER CODE END Header_Start_tx_task */
+void Start_tx_task(void *argument)
 {
-  /* USER CODE BEGIN Start_nrf_task */
+  /* USER CODE BEGIN Start_tx_task */
   /* Infinite loop */
+#if NRF_MODE == RX
+	uint16_t data = 0;
+	DATA DATA_t;
 
-	osDelay(1000);
-
-	#if NRF_MODE == TX
-	  NRF24_init_TX();
-	#else
-	  NRF24_init_RX();
-	#endif
-
-	  for(;;)
-	  {
-
-#if NRF_MODE == TX
-	 // NRF24L01_Transmit();
-#else
-	  // NRF24L01_Receive();
-	NRF24L01_Receive_Real_Data();
+	NRF24_init_RX();
 #endif
 
-	  osDelay(1);
-  }
-  /* USER CODE END Start_nrf_task */
+	for(;;)
+	{
+#if NRF_MODE == RX
+	NRF24L01_Receive_Real_Data();
+
+	if(xQueueReceive(DATAQueueHandle, &DATA_t, 0))
+	{
+		// convert R data into angle
+		DATA_t.R1 = DATA_t.R1 / 23;
+		DATA_t.R2 = DATA_t.R2 / 23;
+		DATA_t.R3 = DATA_t.R3 / 23;
+		DATA_t.R4 = DATA_t.R4 / 23;
+		DATA_t.R5 = DATA_t.R5 / 23;
+
+		// set angle for all servo motors
+		Set_Servo_Angle(1, DATA_t.R1);
+		Set_Servo_Angle(2, 180 - DATA_t.R2);
+		Set_Servo_Angle(3, 180 - DATA_t.R3);
+		Set_Servo_Angle(4, DATA_t.R4);
+		Set_Servo_Angle(5, 180 - DATA_t.R5);
+	}
+	osDelay(10);
+
+#endif
+		osDelay(1);
+	}
+  /* USER CODE END Start_tx_task */
 }
 
-/* USER CODE BEGIN Header_StartAdcTask */
+/* USER CODE BEGIN Header_Start_rx_Task */
 /**
-* @brief Function implementing the AdcTask thread.
+* @brief Function implementing the rx_Task thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartAdcTask */
-void StartAdcTask(void *argument)
+/* USER CODE END Header_Start_rx_Task */
+void Start_rx_Task(void *argument)
 {
-  /* USER CODE BEGIN StartAdcTask */
+  /* USER CODE BEGIN Start_rx_Task */
   /* Infinite loop */
 
-	uint16_t adc_values[7] = {0};
-
-  for(;;)
-  {
-
 #if NRF_MODE == TX
-	  // Resistors
-	  adc_values[0] = ADC_Get_Value(1);
-	  adc_values[1] = ADC_Get_Value(5);
-	  adc_values[2] = ADC_Get_Value(6);
-	  adc_values[3] = ADC_Get_Value(7);
-	  adc_values[4] = ADC_Get_Value(8);
-
-	  // Joystick
-	  adc_values[5] = ADC_Get_Value(0);
-	  adc_values[6] = ADC_Get_Value(9);
-
-	  // Send data into queue
-	  uint8_t adc_data[20] = {0};
-
-	  memcpy(&adc_data[0], &adc_values[0], sizeof(uint16_t));
-	  memcpy(&adc_data[2], &adc_values[1], sizeof(uint16_t));
-	  memcpy(&adc_data[4], &adc_values[2], sizeof(uint16_t));
-	  memcpy(&adc_data[6], &adc_values[3], sizeof(uint16_t));
-	  memcpy(&adc_data[8], &adc_values[4], sizeof(uint16_t));
-
-	  memcpy(&adc_data[10], &adc_values[6], sizeof(uint16_t));
-	  memcpy(&adc_data[12], &adc_values[5], sizeof(uint16_t));
-
-	  adc_data[14] = 99;			// Заглушка під кнопку джойстика
-
-	  //
-	  NRF24L01_Transmit_Real_Data(adc_data);
+	uint16_t adc_values[7] = {0};
+	NRF24_init_TX();
 #endif
 
+	for(;;)
+	{
+#if NRF_MODE == TX
+		// Resistors
+		adc_values[0] = ADC_Get_Value(1);
+		adc_values[1] = ADC_Get_Value(5);
+		adc_values[2] = ADC_Get_Value(6);
+		adc_values[3] = ADC_Get_Value(7);
+		adc_values[4] = ADC_Get_Value(8);
 
+		// Joystick
+		adc_values[5] = ADC_Get_Value(0);
+		adc_values[6] = ADC_Get_Value(9);
 
+		// Send data into queue
+		uint8_t adc_data[20] = {0};
 
+		memcpy(&adc_data[0], &adc_values[0], sizeof(uint16_t));
+		memcpy(&adc_data[2], &adc_values[1], sizeof(uint16_t));
+		memcpy(&adc_data[4], &adc_values[2], sizeof(uint16_t));
+		memcpy(&adc_data[6], &adc_values[3], sizeof(uint16_t));
+		memcpy(&adc_data[8], &adc_values[4], sizeof(uint16_t));
 
-	  osDelay(1);
-  }
-  /* USER CODE END StartAdcTask */
+		memcpy(&adc_data[10], &adc_values[6], sizeof(uint16_t));
+		memcpy(&adc_data[12], &adc_values[5], sizeof(uint16_t));
+
+		adc_data[14] = 99;			// Заглушка під кнопку джойстика
+
+		//
+		NRF24L01_Transmit_Real_Data(adc_data);
+#endif
+
+		osDelay(10);
+	}
+  /* USER CODE END Start_rx_Task */
 }
 
 /**
