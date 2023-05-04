@@ -39,6 +39,10 @@ static void NRF24_FlushTX(void);
 void NRF24L01_RX_Mode(void);
 void NRF24_Write_Buf(uint8_t addr,uint8_t *pBuf,uint8_t bytes);
 
+
+void print_Data_Ower_uart(uint8_t *RX_BUF);
+void parsing_Data(uint8_t *RX_BUF);
+
 // -------------------------------------------------------------------------------------
 __STATIC_INLINE void DelayMicro(__IO uint32_t micros)
 {
@@ -380,7 +384,7 @@ void NRF24L01_Receive(void)
 	uint8_t status=0x01;
 	uint16_t dt=0;
 
-	while((GPIO_PinState)IRQ == GPIO_PIN_SET) {}			//	 Замінити це на нотифікацію від зміни ножки або семафор
+	while((GPIO_PinState)IRQ == GPIO_PIN_SET) {}
 
 	status = NRF24_ReadReg(STATUS);
 
@@ -402,7 +406,7 @@ void NRF24L01_Receive(void)
 	    //NumberL_7219(dt);
 	    NRF24_WriteReg(STATUS, 0x40);
 
-	    //char test_data[10] = "TEST\n\r";
+
 	    HAL_UART_Transmit(&huart1, RX_BUF, sizeof(RX_BUF), 1000);
 
 	  }
@@ -426,7 +430,6 @@ void NRF24L01_Transmit_Real_Data(uint8_t* data)
 //	memcpy(buf1+2,(uint8_t*)&retr_cnt_full,2);
 
 
-	char test_tx_data[] = "123\n\r";
 
 	NRF24L01_Send(data);
 	//dt = NRF24L01_Send(buf1);
@@ -470,70 +473,69 @@ void NRF24L01_Receive_Real_Data(void)
 	    NRF24_WriteReg(STATUS, 0x40);
 
 
-
-	    char str[50] = {0};
-
-	    char str_main_buf[100] = {0};
-
-	    uint16_t rx_data = 0;
-	    char str_buf[15] = {0};
-
-	    sprintf(str, "---------\n\r", rx_data);
-	    HAL_UART_Transmit(&huart1, str, sizeof(str), 1000);
-
-	    memset(str_buf, 0, sizeof(str_buf));
-
-	    uint8_t r = 1;
-	    for(uint8_t i = 0; i <= 12; i = i+2)
-	    {
-
-	    	rx_data = RX_BUF[0+i];
-	    	rx_data = rx_data + (RX_BUF[1+i] * 256);
-	    	sprintf(str, "R%d: %d  ", r, rx_data);
-
-	    	strcat(str_main_buf, str);
-	    	r++;
-	    }
-
-	    HAL_UART_Transmit(&huart1, str_main_buf, sizeof(str_main_buf), 1000);
-	    //Зробити чергу довжиною в str_main_buf і парсити її в тасці StartDefaultTask
-
-
-	    DATA DATA_t;
-
-
-
-	    DATA_t.R1 = RX_BUF[0];
-	    DATA_t.R1 = DATA_t.R1 + (RX_BUF[1] * 256);
-
-	    DATA_t.R2 = RX_BUF[2];
-	    DATA_t.R2 = DATA_t.R2 + (RX_BUF[3] * 256);
-
-	    DATA_t.R3 = RX_BUF[4];
-	   	DATA_t.R3 = DATA_t.R3 + (RX_BUF[5] * 256);
-
-	   	DATA_t.R4 = RX_BUF[6];
-	   	DATA_t.R4 = DATA_t.R4 + (RX_BUF[7] * 256);
-
-	   	DATA_t.R5 = RX_BUF[8];
-	   	DATA_t.R5 = DATA_t.R5 + (RX_BUF[9] * 256);
-
-	   	DATA_t.joystick_X = RX_BUF[10];
-	   	DATA_t.joystick_X = DATA_t.joystick_X + (RX_BUF[11] * 256);
-
-	   	DATA_t.joystick_Y = RX_BUF[12];
-	   	DATA_t.joystick_Y = DATA_t.joystick_Y + (RX_BUF[13] * 256);
-
-		DATA_t.joystick_button = RX_BUF[14];
-		DATA_t.joystick_button = DATA_t.joystick_button + (RX_BUF[15] * 256);
-
-
-	    xQueueSendToBack(DATAQueueHandle, &DATA_t, 1000);
-
-
-
+	    print_Data_Ower_uart(RX_BUF);
+	    parsing_Data(RX_BUF);
 	  }
 }
+// -------------------------------------------------------------------------------------
+void print_Data_Ower_uart(uint8_t *RX_BUF)
+{
+	char str[50] = {0};
+	char str_main_buf[100] = {0};
+	uint16_t rx_data = 0;
+	char str_buf[15] = {0};
+
+	sprintf(str, "---------\n\r", rx_data);
+	HAL_UART_Transmit(&huart1, str, sizeof(str), 1000);
+
+	memset(str_buf, 0, sizeof(str_buf));
+
+	uint8_t r = 1;
+	for(uint8_t i = 0; i <= 12; i = i+2)
+	{
+		rx_data = RX_BUF[0+i];
+		rx_data = rx_data + (RX_BUF[1+i] * 256);
+		sprintf(str, "R%d: %d  ", r, rx_data);
+
+		strcat(str_main_buf, str);
+		r++;
+	}
+
+	HAL_UART_Transmit(&huart1, str_main_buf, sizeof(str_main_buf), 100);
+}
+// -------------------------------------------------------------------------------------
+void parsing_Data(uint8_t *RX_BUF)
+{
+    DATA DATA_t;
+
+    DATA_t.R1 = RX_BUF[0];
+    DATA_t.R1 = DATA_t.R1 + (RX_BUF[1] * 256);
+
+    DATA_t.R2 = RX_BUF[2];
+    DATA_t.R2 = DATA_t.R2 + (RX_BUF[3] * 256);
+
+    DATA_t.R3 = RX_BUF[4];
+   	DATA_t.R3 = DATA_t.R3 + (RX_BUF[5] * 256);
+
+   	DATA_t.R4 = RX_BUF[6];
+   	DATA_t.R4 = DATA_t.R4 + (RX_BUF[7] * 256);
+
+   	DATA_t.R5 = RX_BUF[8];
+   	DATA_t.R5 = DATA_t.R5 + (RX_BUF[9] * 256);
+
+   	DATA_t.joystick_X = RX_BUF[10];
+   	DATA_t.joystick_X = DATA_t.joystick_X + (RX_BUF[11] * 256);
+
+   	DATA_t.joystick_Y = RX_BUF[12];
+   	DATA_t.joystick_Y = DATA_t.joystick_Y + (RX_BUF[13] * 256);
+
+	DATA_t.joystick_button = RX_BUF[14];
+	DATA_t.joystick_button = DATA_t.joystick_button + (RX_BUF[15] * 256);
+
+
+    xQueueSendToBack(DATAQueueHandle, &DATA_t, 1000);
+}
+// -------------------------------------------------------------------------------------
 
 
 

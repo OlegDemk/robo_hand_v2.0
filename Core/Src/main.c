@@ -45,7 +45,7 @@ uint8_t buf1[40] = {0};
 #define RX 1
 #define TX 0
 
-#define NRF_MODE RX
+#define NRF_MODE TX
 
 
 
@@ -233,7 +233,6 @@ void Test_Servo_Motor(void)
 // -------------------------------------------------------------------------------------
 void Set_Servo_Angle(uint8_t ServoNum, uint8_t angle)
 {
-
 	uint32_t DutyCycle = (200*angle)/180;		// convert angle into DutyCycle
 
 	DutyCycle = DutyCycle + 45;
@@ -404,14 +403,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-//#if NRF_MODE == TX
-//	  NRF24L01_Transmit();
-//#else
-//	  NRF24L01_Receive();
-//#endif
-
-
 
     /* USER CODE END WHILE */
 
@@ -825,8 +816,6 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
 
 	uint16_t data = 0;
-
-
 	DATA DATA_t;
 
   for(;;)
@@ -842,30 +831,25 @@ void StartDefaultTask(void *argument)
 	  {
 		  uint8_t angle = 0;
 
-
 		  // convert R data into angle
-
 		  DATA_t.R1 = DATA_t.R1 / 23;
 		  DATA_t.R2 = DATA_t.R2 / 23;
 		  DATA_t.R3 = DATA_t.R3 / 23;
 		  DATA_t.R4 = DATA_t.R4 / 23;
 		  DATA_t.R5 = DATA_t.R5 / 23;
 
+
 		  Set_Servo_Angle(1, DATA_t.R1);
 		  Set_Servo_Angle(2, DATA_t.R2);
 		  Set_Servo_Angle(3, DATA_t.R3);
 		  Set_Servo_Angle(4, DATA_t.R4);
 		  Set_Servo_Angle(5, DATA_t.R5);
-
-
-
-
 	  }
 
 //	  Test_Servo_Motor();
 //	  osDelay(3000);
 
-	  osDelay(100);
+	  osDelay(1);
 
 
 
@@ -959,7 +943,7 @@ void StartAdcTask(void *argument)
 
 
 
-	  osDelay(100);
+	  osDelay(1);
   }
   /* USER CODE END StartAdcTask */
 }
