@@ -48,21 +48,9 @@ typedef struct{
 	uint16_t R3;
 	uint16_t R4;
 	uint16_t R5;
-
-	uint16_t joystick_X;
-	uint16_t joystick_Y;
-
-	uint16_t joystick_button;
 }DATA;
 
-//struct{
-////	    	 uint16_t R1;
-////	    	 ...
-////			 uint16_t R5;
-////	    	 uint16_t djoistik x
-////			 uint16_t djoistik y
-////			 uint16_t button
-////	     };
+
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

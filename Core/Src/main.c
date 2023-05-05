@@ -31,7 +31,6 @@
 char str1[40] = {0};
 uint8_t buf1[40] = {0};
 
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -582,7 +581,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -810,33 +809,11 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
 
-//	uint16_t data = 0;
-//	DATA DATA_t;
 
   for(;;)
   {
-//	  if(xQueueReceive(DATAQueueHandle, &DATA_t, 0))
-//	  {
-//
-//		  // convert R data into angle
-//		  DATA_t.R1 = DATA_t.R1 / 23;
-//		  DATA_t.R2 = DATA_t.R2 / 23;
-//		  DATA_t.R3 = DATA_t.R3 / 23;
-//		  DATA_t.R4 = DATA_t.R4 / 23;
-//		  DATA_t.R5 = DATA_t.R5 / 23;
-//
-//
-//		  Set_Servo_Angle(1, DATA_t.R1);
-//		  Set_Servo_Angle(2, DATA_t.R2);
-//		  Set_Servo_Angle(3, DATA_t.R3);
-//		  Set_Servo_Angle(4, DATA_t.R4);
-//		  Set_Servo_Angle(5, DATA_t.R5);
-//	  }
-//
-//
+
 	  osDelay(10);
-
-
 
   }
   /* USER CODE END 5 */
@@ -916,25 +893,15 @@ void Start_rx_Task(void *argument)
 		adc_values[3] = ADC_Get_Value(7);
 		adc_values[4] = ADC_Get_Value(8);
 
-		// Joystick
-		adc_values[5] = ADC_Get_Value(0);
-		adc_values[6] = ADC_Get_Value(9);
-
 		// Send data into queue
 		uint8_t adc_data[20] = {0};
-
 		memcpy(&adc_data[0], &adc_values[0], sizeof(uint16_t));
 		memcpy(&adc_data[2], &adc_values[1], sizeof(uint16_t));
 		memcpy(&adc_data[4], &adc_values[2], sizeof(uint16_t));
 		memcpy(&adc_data[6], &adc_values[3], sizeof(uint16_t));
 		memcpy(&adc_data[8], &adc_values[4], sizeof(uint16_t));
 
-		memcpy(&adc_data[10], &adc_values[6], sizeof(uint16_t));
-		memcpy(&adc_data[12], &adc_values[5], sizeof(uint16_t));
 
-		adc_data[14] = 99;			// Заглушка під кнопку джойстика
-
-		//
 		NRF24L01_Transmit_Real_Data(adc_data);
 #endif
 

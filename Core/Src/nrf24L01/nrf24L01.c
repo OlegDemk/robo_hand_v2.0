@@ -16,7 +16,7 @@
 #include "queue.h"
 
 #define TX_ADR_WIDTH 3
-#define TX_PLOAD_WIDTH 18    // 5
+#define TX_PLOAD_WIDTH 10    // 5
 
 
 extern char str1[40];
@@ -69,17 +69,16 @@ void NRF24_init_TX(void)
 	 NRF24_WriteReg(FEATURE, 0);
 	 NRF24_WriteReg(DYNPD, 0);
 	 NRF24_WriteReg(STATUS, 0x70);			// Reset flags for IRQ
-	 NRF24_WriteReg(RF_CH, 76); 			//  2476 MHz
+	 NRF24_WriteReg(RF_CH, 76); 			// 2476 MHz
 	 //NRF24_WriteReg(RF_SETUP, 0x06);		// TX_PWR:0dBm, Datarate:1Mbps      - WAS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-	 NRF24_WriteReg(RF_SETUP, 0x26);  		// TX_PWR:0dBm, Datarate:250kbps	- New version
+	 //NRF24_WriteReg(RF_SETUP, 0x26);  		// TX_PWR:0dBm, Datarate:250kbps	- New version
+	 NRF24_WriteReg(RF_SETUP, 0x0F);  		// TX_PWR:0dBm, Datarate: 1Mbps	- New version
 
 	 NRF24_Write_Buf(TX_ADDR, TX_ADDRESS, TX_ADR_WIDTH);
-
 	 NRF24_Write_Buf(RX_ADDR_P0, TX_ADDRESS, TX_ADR_WIDTH);
-
 	 NRF24_WriteReg(RX_PW_P0, TX_PLOAD_WIDTH);	 //Number of bytes in RX payload in data pipe 0
 
-	 NRF24L01_RX_Mode();
+	 NRF24L01_TX_Mode();
 	 LED_OFF;
 }
 // -------------------------------------------------------------------------------------
@@ -106,12 +105,11 @@ void NRF24_init_RX(void)
 	 NRF24_WriteReg(STATUS, 0x70);			// Reset flags for IRQ
 	 NRF24_WriteReg(RF_CH, 76); 			//   2476 MHz
 	 //NRF24_WriteReg(RF_SETUP, 0x06);		// TX_PWR:0dBm, Datarate:1Mbps  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< WAS
-	 NRF24_WriteReg(RF_SETUP, 0x26); 	    // TX_PWR:0dBm, Datarate:250kbps	<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	 //NRF24_WriteReg(RF_SETUP, 0x26); 	    // TX_PWR:0dBm, Datarate:250kbps	<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	 NRF24_WriteReg(RF_SETUP, 0x0F);  		// TX_PWR:0dBm, Datarate: 1Mbps	- New version
 
 	 NRF24_Write_Buf(TX_ADDR, TX_ADDRESS, TX_ADR_WIDTH);
-
 	 NRF24_Write_Buf(RX_ADDR_P1, TX_ADDRESS, TX_ADR_WIDTH);
-
 	 NRF24_WriteReg(RX_PW_P1, TX_PLOAD_WIDTH);	 //Number of bytes in RX payload in data pipe 1
 
 	 NRF24L01_RX_Mode();
@@ -258,15 +256,12 @@ void testReadWriteSetingd(void)
 
 //	  HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
 
-
-
 }
 // -------------------------------------------------------------------------------------
 void testDelay(void)
 {
 	//HAL_GPIO_TogglePin(GPIOC, LED_Pin);
 	DelayMicro(1000);
-
 }
 // -------------------------------------------------------------------------------------
 void NRF24L01_TX_Mode(uint8_t *pBuf)
@@ -305,7 +300,7 @@ uint8_t NRF24L01_Send(uint8_t *pBuf)
 	NRF24_WriteReg(CONFIG,regval);
 	DelayMicro(150);
 
-	uint8_t dt_reg = NRF24_ReadReg(CONFIG);				// For debug
+//	uint8_t dt_reg = NRF24_ReadReg(CONFIG);				// For debug
 
 	NRF24_Transmit(WR_TX_PLOAD, pBuf, TX_PLOAD_WIDTH);
 	CE_SET;
@@ -334,7 +329,6 @@ uint8_t NRF24L01_Send(uint8_t *pBuf)
 	NRF24L01_RX_Mode();
 
 	return regval;
-
 }
 // -------------------------------------------------------------------------------------
 void NRF24L01_Transmit(void)
@@ -487,7 +481,7 @@ void print_Data_Ower_uart(uint8_t *RX_BUF)
 	memset(str_buf, 0, sizeof(str_buf));
 
 	uint8_t r = 1;
-	for(uint8_t i = 0; i <= 12; i = i+2)
+	for(uint8_t i = 0; i <= 9; i = i+2)
 	{
 		rx_data = RX_BUF[0+i];
 		rx_data = rx_data + (RX_BUF[1+i] * 256);
@@ -518,16 +512,6 @@ void parsing_Data(uint8_t *RX_BUF)
 
    	DATA_t.R5 = RX_BUF[8];
    	DATA_t.R5 = DATA_t.R5 + (RX_BUF[9] * 256);
-
-   	DATA_t.joystick_X = RX_BUF[10];
-   	DATA_t.joystick_X = DATA_t.joystick_X + (RX_BUF[11] * 256);
-
-   	DATA_t.joystick_Y = RX_BUF[12];
-   	DATA_t.joystick_Y = DATA_t.joystick_Y + (RX_BUF[13] * 256);
-
-	DATA_t.joystick_button = RX_BUF[14];
-	DATA_t.joystick_button = DATA_t.joystick_button + (RX_BUF[15] * 256);
-
 
     xQueueSendToBack(DATAQueueHandle, &DATA_t, 1000);
 }

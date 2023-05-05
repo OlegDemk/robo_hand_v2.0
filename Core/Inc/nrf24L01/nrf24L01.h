@@ -45,6 +45,9 @@
 #define RF_SETUP 0x06 //'RF setup' register address
 #define STATUS 0x07 //'Status' register address
 #define OBSERVE_TX 0x08 //'Transmit observe' register
+
+#define RPD 0x09		// Received Power Director
+
 #define RX_ADDR_P0 0x0A //'RX address pipe0' register address
 #define RX_ADDR_P1 0x0B //'RX address pipe1' register address
 #define TX_ADDR 0x10 //'TX address' register address
