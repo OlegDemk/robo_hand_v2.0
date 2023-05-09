@@ -9,3 +9,5 @@ Remoute has 5 potentiometers, nrf24L01+ module and 18650 battery. Remoute transm
 ![alt text](https://github.com/OlegDemk/robo_hand_v2.0/blob/main/photo_2.jpg)
 
 ![alt text](https://github.com/OlegDemk/robo_hand_v2.0/blob/main/remote.jpg)
+
+![alt text](https://github.com/OlegDemk/robo_hand_v2.0/blob/main/data.png)
