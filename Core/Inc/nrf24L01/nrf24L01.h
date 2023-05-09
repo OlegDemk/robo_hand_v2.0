@@ -50,9 +50,19 @@
 
 #define RX_ADDR_P0 0x0A //'RX address pipe0' register address
 #define RX_ADDR_P1 0x0B //'RX address pipe1' register address
+#define RX_ADDR_P2 0x0C //'RX address pipe2' register address
+#define RX_ADDR_P3 0x0D //'RX address pipe3' register address
+#define RX_ADDR_P4 0x0E //'RX address pipe4' register address
+#define RX_ADDR_P5 0x0F //'RX address pipe5' register address
+
 #define TX_ADDR 0x10 //'TX address' register address
 #define RX_PW_P0 0x11 //'RX payload width, pipe0' register address
 #define RX_PW_P1 0x12 //'RX payload width, pipe1' register address
+#define RX_PW_P2 0x13 //'RX payload width, pipe2' register address
+#define RX_PW_P3 0x14 //'RX payload width, pipe3' register address
+#define RX_PW_P4 0x15 //'RX payload width, pipe4' register address
+#define RX_PW_P5 0x16 //'RX payload width, pipe5' register address
+
 #define FIFO_STATUS 0x17 //'FIFO Status Register' register address
 #define DYNPD 0x1C
 #define FEATURE 0x1D
