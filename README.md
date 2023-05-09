@@ -6,3 +6,5 @@ Robot manipulator was printed on 3d printer Creality ender-3 v2, plastic PETg. D
 ![alt text](https://github.com/OlegDemk/robo_hand_v2.0/blob/main/photo_1.jpg)
 
 ![alt text](https://github.com/OlegDemk/robo_hand_v2.0/blob/main/photo_2.jpg)
+
+![alt text](https://github.com/OlegDemk/robo_hand_v2.0/blob/main/remote.jpg)
