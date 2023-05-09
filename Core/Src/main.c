@@ -44,7 +44,7 @@ uint8_t buf1[40] = {0};
 #define RX 1
 #define TX 0
 
-#define NRF_MODE TX
+#define NRF_MODE RX
 
 
 
